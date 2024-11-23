@@ -1,0 +1,53 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-top: 3.6rem;
+  padding-inline: 1rem;
+  padding-bottom: 12rem;
+  gap: 2.4rem;
+}
+
+.cardContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 10rem));
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  width: 100%;
+}
+
+.card {
+  width: 100%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cannotClick {
+  cursor: not-allowed;
+}
+
+.stat {
+  color: #fbc4fb;
+  font-size: 2.4rem;
+}
+
+.noLineBreak {
+  flex-grow: 1;
+  flex-shrink: 0;
+}
+
+@media screen and (max-width: 440px) {
+  .cardContainer {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .stat {
+    font-size: 2.2rem;
+  }
+}
