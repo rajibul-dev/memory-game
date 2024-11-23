@@ -171,6 +171,7 @@ function App() {
             src={`/assets/${cardRevealed[index] ? cardSrc : "cover"}.png`}
             alt="memory game card"
             onClick={() => handleCardClick(index)}
+            draggable={false}
           />
         ))}
       </div>
