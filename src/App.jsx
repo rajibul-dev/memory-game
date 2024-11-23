@@ -1,5 +1,5 @@
+import { useEffect, useReducer } from "react";
 import style from "./app.module.css";
-import { useEffect, useState } from "react";
 import Button from "./ui/Button";
 
 const cardSrcSequencial = [
@@ -17,115 +17,131 @@ const cardSrcSequencial = [
   "sword-2",
 ];
 
-function randomaizeArrayOrder(arr) {
-  const arrLength = arr.length;
-  const result = [];
-  const indexesUsed = [];
+function shuffleArray(arr) {
+  return arr
+    .map((item) => ({ item, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ item }) => item);
+}
 
-  arr.forEach((item) => {
-    let randomIndex = Math.floor(Math.random() * arrLength);
-    while (indexesUsed.includes(randomIndex)) {
-      randomIndex = Math.floor(Math.random() * arrLength);
+// Initial game state
+const initialState = (cards) => ({
+  cardSrcRandomized: shuffleArray(cards),
+  cardRevealed: Array(cards.length).fill(false),
+  peekedIndexes: [],
+  currentOpened: null,
+  count: 0,
+  bestScore: localStorage.getItem("bestScore"),
+  won: false,
+});
+
+// Reducer to manage game state
+function gameReducer(state, action) {
+  switch (action.type) {
+    case "REVEAL_CARD": {
+      const { cardIndex, cardName } = action.payload;
+      const newRevealed = [...state.cardRevealed];
+      newRevealed[cardIndex] = true;
+
+      if (state.peekedIndexes.length === 0) {
+        return {
+          ...state,
+          cardRevealed: newRevealed,
+          peekedIndexes: [cardIndex],
+          currentOpened: cardName,
+          count: state.count + 1,
+        };
+      }
+
+      const [firstIndex] = state.peekedIndexes;
+      const firstCardName = state.cardSrcRandomized[firstIndex].split("-")[0];
+
+      if (firstCardName !== cardName) {
+        return {
+          ...state,
+          cardRevealed: newRevealed,
+          peekedIndexes: [firstIndex, cardIndex],
+          count: state.count + 1,
+        };
+      }
+
+      // Cards matched
+      const won = newRevealed.every(Boolean);
+      const bestScore =
+        won && (!state.bestScore || state.count + 1 < state.bestScore)
+          ? state.count + 1
+          : state.bestScore;
+
+      if (won) {
+        localStorage.setItem("bestScore", bestScore);
+      }
+
+      return {
+        ...state,
+        cardRevealed: newRevealed,
+        peekedIndexes: [],
+        currentOpened: null,
+        count: state.count + 1,
+        won,
+        bestScore,
+      };
     }
 
-    if (randomIndex || randomIndex === 0) {
-      indexesUsed.push(randomIndex);
-      result[randomIndex] = item;
-    }
-  });
+    case "HIDE_CARDS": {
+      const [firstIndex, secondIndex] = state.peekedIndexes;
+      const newRevealed = [...state.cardRevealed];
+      newRevealed[firstIndex] = false;
+      newRevealed[secondIndex] = false;
 
-  return result;
+      return {
+        ...state,
+        cardRevealed: newRevealed,
+        peekedIndexes: [],
+        currentOpened: null,
+      };
+    }
+
+    case "RESET_GAME":
+      return initialState(state.cardSrcRandomized);
+
+    default:
+      return state;
+  }
 }
 
 function App() {
-  const [cardSrcRandomized, setCardSrcRandomized] = useState(
-    randomaizeArrayOrder(cardSrcSequencial)
-  );
-  const [count, setCount] = useState(0);
-  const [cardRevealed, setCardRevealed] = useState(
-    Array.from({ length: cardSrcRandomized.length }, () => false)
-  );
-  const [currentOpened, setCurrentOpened] = useState(null);
-  const [peekedIndexes, setPeekedIndexes] = useState([null, null]);
-  const isNotMatchedAndShouldWait = !peekedIndexes.includes(null);
-  const won = !cardRevealed.includes(false);
-
-  const [bestScore, setBestScore] = useState(localStorage.getItem("bestScore"));
-
-  useEffect(
-    function () {
-      // if the two cards didn't match then close them
-      if (isNotMatchedAndShouldWait) {
-        setTimeout(() => {
-          setCardRevealed((curr) => {
-            const changed = curr.slice();
-            changed[peekedIndexes[0]] = false;
-            changed[peekedIndexes[1]] = false;
-            return changed;
-          });
-          setPeekedIndexes([null, null]);
-        }, 1000);
-      }
-
-      if (won) {
-        if (bestScore === null) {
-          localStorage.setItem("bestScore", count);
-          setBestScore(count);
-        } else {
-          if (Number(bestScore) > count) {
-            localStorage.setItem("bestScore", count);
-            setBestScore(count);
-          }
-        }
-      }
-    },
-    [peekedIndexes, won]
+  const [state, dispatch] = useReducer(
+    gameReducer,
+    cardSrcSequencial,
+    initialState
   );
 
-  function handleCardClick(e, cardIndex, isCovered) {
-    e.preventDefault();
+  const {
+    cardSrcRandomized,
+    cardRevealed,
+    peekedIndexes,
+    count,
+    won,
+    bestScore,
+  } = state;
 
-    if (!isCovered || isNotMatchedAndShouldWait) {
-      // nothing happens if you click one that's already opened
-      return;
+  useEffect(() => {
+    if (peekedIndexes.length === 2) {
+      const timeout = setTimeout(() => dispatch({ type: "HIDE_CARDS" }), 1000);
+      return () => clearTimeout(timeout);
     }
+  }, [peekedIndexes]);
 
-    setCount((curr) => curr + 1);
+  const handleCardClick = (index) => {
+    if (cardRevealed[index] || peekedIndexes.length === 2) return;
 
-    setCardRevealed((curr) => {
-      const changed = curr.slice();
-      changed[cardIndex] = true;
-      return changed;
-    });
+    const cardName = cardSrcRandomized[index].split("-")[0];
+    dispatch({ type: "REVEAL_CARD", payload: { cardIndex: index, cardName } });
+  };
 
-    const opened = cardSrcRandomized[cardIndex].split("-")[0];
-
-    if (!currentOpened) {
-      setCurrentOpened(opened);
-      setPeekedIndexes([cardIndex, null]);
-    } else {
-      if (currentOpened !== opened) {
-        setCurrentOpened(null);
-        setPeekedIndexes((curr) => {
-          const changed = curr.slice();
-          changed[1] = cardIndex;
-          return changed;
-        });
-      } else {
-        // when it matches
-        setCurrentOpened(null);
-        setPeekedIndexes([null, null]);
-      }
-    }
-  }
-
-  function playAgain() {
-    setCount(0);
-    setCardRevealed(
-      Array.from({ length: cardSrcRandomized.length }, () => false)
-    );
-    setCardSrcRandomized(randomaizeArrayOrder(cardSrcSequencial));
-  }
+  const playAgain = () => {
+    dispatch({ type: "RESET_GAME" });
+  };
 
   return (
     <div className={style.container}>
@@ -150,11 +166,11 @@ function App() {
           <img
             key={cardSrc}
             className={`${style.card} ${
-              isNotMatchedAndShouldWait && style.cannotClick
+              peekedIndexes.length === 2 && style.cannotClick
             }`}
             src={`/assets/${cardRevealed[index] ? cardSrc : "cover"}.png`}
             alt="memory game card"
-            onClick={(e) => handleCardClick(e, index, !cardRevealed[index])}
+            onClick={() => handleCardClick(index)}
           />
         ))}
       </div>
