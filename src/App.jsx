@@ -37,9 +37,10 @@ function randomaizeArrayOrder(arr) {
   return result;
 }
 
-const cardSrcRandomized = randomaizeArrayOrder(cardSrcSequencial);
-
 function App() {
+  const [cardSrcRandomized, setCardSrcRandomized] = useState(
+    randomaizeArrayOrder(cardSrcSequencial)
+  );
   const [count, setCount] = useState(0);
   const [cardRevealed, setCardRevealed] = useState(
     Array.from({ length: cardSrcRandomized.length }, () => false)
@@ -123,6 +124,7 @@ function App() {
     setCardRevealed(
       Array.from({ length: cardSrcRandomized.length }, () => false)
     );
+    setCardSrcRandomized(randomaizeArrayOrder(cardSrcSequencial));
   }
 
   return (
