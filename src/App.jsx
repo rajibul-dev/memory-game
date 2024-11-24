@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 import style from "./app.module.css";
 import Button from "./ui/Button";
 
@@ -145,16 +145,22 @@ function App() {
     preloadImages([...cardSrcSequencial, "cover"]);
   }, []);
 
-  const handleCardClick = (index) => {
-    if (cardRevealed[index] || peekedIndexes.length === 2) return;
+  const handleCardClick = useCallback(
+    (index) => {
+      if (cardRevealed[index] || peekedIndexes.length === 2) return;
 
-    const cardName = cardSrcRandomized[index].split("-")[0];
-    dispatch({ type: "REVEAL_CARD", payload: { cardIndex: index, cardName } });
-  };
+      const cardName = cardSrcRandomized[index].split("-")[0];
+      dispatch({
+        type: "REVEAL_CARD",
+        payload: { cardIndex: index, cardName },
+      });
+    },
+    [cardRevealed, peekedIndexes, cardSrcRandomized]
+  );
 
-  const playAgain = () => {
+  const playAgain = useCallback(() => {
     dispatch({ type: "RESET_GAME" });
-  };
+  }, []);
 
   return (
     <div className={style.container}>
