@@ -24,6 +24,14 @@ function shuffleArray(arr) {
     .map(({ item }) => item);
 }
 
+// Preload images
+function preloadImages(images) {
+  images.forEach((image) => {
+    const img = new Image();
+    img.src = `/assets/${image}.png`;
+  });
+}
+
 // Initial game state
 const initialState = (cards) => ({
   cardSrcRandomized: shuffleArray(cards),
@@ -131,6 +139,11 @@ function App() {
       return () => clearTimeout(timeout);
     }
   }, [peekedIndexes]);
+
+  useEffect(() => {
+    // Preload all card images
+    preloadImages([...cardSrcSequencial, "cover"]);
+  }, []);
 
   const handleCardClick = (index) => {
     if (cardRevealed[index] || peekedIndexes.length === 2) return;
