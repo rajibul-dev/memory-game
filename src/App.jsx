@@ -185,6 +185,7 @@ function App() {
             alt="memory game card"
             onClick={() => handleCardClick(index)}
             draggable={false}
+            loading="lazy"
           />
         ))}
       </div>
