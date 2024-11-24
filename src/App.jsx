@@ -127,7 +127,7 @@ function App() {
 
   useEffect(() => {
     if (peekedIndexes.length === 2) {
-      const timeout = setTimeout(() => dispatch({ type: "HIDE_CARDS" }), 500);
+      const timeout = setTimeout(() => dispatch({ type: "HIDE_CARDS" }), 1000);
       return () => clearTimeout(timeout);
     }
   }, [peekedIndexes]);
