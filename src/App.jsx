@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect, useReducer } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 import style from "./app.module.css";
 import Button from "./ui/Button";
 
@@ -17,7 +17,6 @@ const cardSrcSequencial = [
   "sword-2",
 ];
 
-// Function to shuffle the array
 function shuffleArray(arr) {
   return arr
     .map((item) => ({ item, sort: Math.random() }))
@@ -35,7 +34,7 @@ function preloadImages(images) {
 
 // Initial game state
 const initialState = (cards) => ({
-  cardSrcRandomized: cards,
+  cardSrcRandomized: shuffleArray(cards),
   cardRevealed: Array(cards.length).fill(false),
   peekedIndexes: [],
   currentOpened: null,
@@ -119,11 +118,9 @@ function gameReducer(state, action) {
 }
 
 function App() {
-  const shuffledCards = useMemo(() => shuffleArray(cardSrcSequencial), []);
-
   const [state, dispatch] = useReducer(
     gameReducer,
-    shuffledCards,
+    cardSrcSequencial,
     initialState
   );
 
